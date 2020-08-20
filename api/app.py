@@ -113,26 +113,57 @@ def create_app():
                     abort(422)
 
 # PATCH endpoints
-    @app.route('/books', methods=["PATCH"])
-    def patch_book():
+    @app.route('/books/<int:book_id>', methods=["PATCH"])
+    def patch_book(book_id):
         body = request.get_json()
-        book_name = body.get("name", None)
-        book_id = body.get("id", None)
-        
+        book_to_update = Book.query.filter(Book.id == book_id).one_or_none()
+        new_name = body.get("name", None)
+        new_category = Category.query.filter(Category.name == body.get("category", None)).first()
+        if not book_to_update:
+            abort(404)
+        else:
+            try:
+                if not(new_name) and not(new_category):
+                    print("all body is not valid")
+                    abort(422)
+                elif not(new_name):  # new_name == None
+                    print("new_name == None")
+                    print(new_category)
+                    book_to_update.category = new_category
+                    book_to_update.update()
+                elif not(new_category):  # new_category == None
+                    print("new_category == None")
+                    print(new_name)
+                    book_to_update.name = new_name
+                    book_to_update.update()
+                else:  # new_name + new_cateogry !=  None
+                    print("new_name + new_cateogry !=  None")
+                    book_to_update.category = new_category
+                    book_to_update.name = new_name
+                    book_to_update.update()
+            except:
+                abort(400)
 
-    @app.errorhandler(404)
+        return jsonify({'success': True,
+                        "book_id_updated": book_id})
+
+    @ app.errorhandler(400)
+    def error_400(error):
+        return jsonify({"success": False, "message": "bad request"}), 400
+
+    @ app.errorhandler(404)
     def error_404(error):
         return jsonify({"success": False, "message": "page not found"}), 404
 
-    @app.errorhandler(422)
+    @ app.errorhandler(422)
     def error_422(error):
         return jsonify({"success": False, "message": "resource not found"}), 422
 
-    @app.errorhandler(409)
+    @ app.errorhandler(409)
     def error_409(error):
         return jsonify({"success": False, "message": "conflict resources"}), 409
 
-    @app.errorhandler(500)
+    @ app.errorhandler(500)
     def error_500(error):
         return jsonify({"success": False, "message": "internal server error. ex: db failure"}), 400
 

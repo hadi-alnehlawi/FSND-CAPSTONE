@@ -2,25 +2,15 @@ import os
 from flask import Flask, request, abort, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
-from .model import db, Book, Category
-from flask_migrate import Migrate
+from .model.model import setup_db, db, Book, Category
 from .auth.auth import AuthError, requires_auth, get_token_auth_header
 import json
 
-database_name = "library"
-user_name = "admin"
-user_password = "admin"
-host_name = "localhost"
-database_port = 5432
 
 def create_app():
-
     app = Flask(__name__)
-    app.config['SQLALCHEMY_DATABASE_URI'] = f'postgres://{user_name}:{user_password}@{host_name}:{database_port}/{database_name}'
-    # app.config['SQLALCHEMY_DATABASE_URI'] = 'postgres://admin@localhost:5432/library'
-    app.config['DEBUG'] = True
-    db.init_app(app)
-    migrate = Migrate(app, db)
+    # model.setup_db
+    setup_db(app)
     CORS(app)
 
     @app.route('/healthy')
@@ -42,8 +32,8 @@ def create_app():
     @app.route('/categories', methods=['GET'])
     @requires_auth('get:books')
     def get_categories(payload):
-        categories=Category.query.order_by(Category.name).all()
-        categories_list=[category.format() for category in categories]
+        categories = Category.query.order_by(Category.name).all()
+        categories_list = [category.format() for category in categories]
         if len(categories_list) == 0:
             abort(422)
         return jsonify({'success': True,
@@ -55,15 +45,15 @@ def create_app():
     @app.route('/books', methods=['POST'])
     @requires_auth('post:books')
     def post_book(payload):
-        body=request.get_json()
-        book_name=body.get('name', None)
-        book_category_name=body.get("category", None)
+        body = request.get_json()
+        book_name = body.get('name', None)
+        book_category_name = body.get("category", None)
         if book_name:
-            new_book=Book(name=book_name)
+            new_book = Book(name=book_name)
             if book_category_name:
-                category=Category.query.filter(Category.name == book_category_name).first()
+                category = Category.query.filter(Category.name == book_category_name).first()
                 if category:
-                    new_book.category=category
+                    new_book.category = category
                 else:
                     abort(422)
             try:
@@ -80,16 +70,16 @@ def create_app():
     @app.route('/categories', methods=['POST'])
     @requires_auth('post:categories')
     def post_category(payload):
-        body=request.get_json()
-        category_name=body.get('name', None)
+        body = request.get_json()
+        category_name = body.get('name', None)
         if category_name:
-            existed_category=Category.query.filter(
+            existed_category = Category.query.filter(
                 Category.name == category_name).first()
             if existed_category:
                 abort(409)
             else:
                 try:
-                    new_category=Category(name=category_name)
+                    new_category = Category(name=category_name)
                     new_category.insert()
                 except:
                     abort(500)
@@ -104,14 +94,14 @@ def create_app():
     @app.route('/books', methods=["DELETE"])
     @requires_auth('delete:books')
     def delete_book(payload):
-        body=request.get_json()
-        book_name=body.get("name", None)
-        book_id=body.get("id", None)
+        body = request.get_json()
+        book_name = body.get("name", None)
+        book_id = body.get("id", None)
         if (not book_name) and (not book_id):
             abort(422)
         else:
             if book_name:
-                books_to_delete=Book.query.filter(Book.name == book_name).all()
+                books_to_delete = Book.query.filter(Book.name == book_name).all()
                 for book in books_to_delete:
                     try:
                         book.delete()
@@ -120,7 +110,7 @@ def create_app():
                     except:
                         abort(422)
             if book_id:
-                book_to_delete=Book.query.filter(Book.id == book_id).first()
+                book_to_delete = Book.query.filter(Book.id == book_id).first()
                 try:
                     book_to_delete.delete()
                     return jsonify({'success': True,
@@ -133,10 +123,10 @@ def create_app():
     @app.route('/books/<int:book_id>', methods=["PATCH"])
     @requires_auth('patch:books')
     def patch_book(payload, book_id):
-        body=request.get_json()
-        book_to_update=Book.query.filter(Book.id == book_id).one_or_none()
-        new_name=body.get("name", None)
-        new_category=Category.query.filter(Category.name == body.get("category", None)).first()
+        body = request.get_json()
+        book_to_update = Book.query.filter(Book.id == book_id).one_or_none()
+        new_name = body.get("name", None)
+        new_category = Category.query.filter(Category.name == body.get("category", None)).first()
         if not book_to_update:
             abort(404)
         else:
@@ -147,17 +137,17 @@ def create_app():
                 elif not(new_name):  # new_name == None
                     print("new_name == None")
                     print(new_category)
-                    book_to_update.category=new_category
+                    book_to_update.category = new_category
                     book_to_update.update()
                 elif not(new_category):  # new_category == None
                     print("new_category == None")
                     print(new_name)
-                    book_to_update.name=new_name
+                    book_to_update.name = new_name
                     book_to_update.update()
                 else:  # new_name + new_cateogry !=  None
                     print("new_name + new_cateogry !=  None")
-                    book_to_update.category=new_category
-                    book_to_update.name=new_name
+                    book_to_update.category = new_category
+                    book_to_update.name = new_name
                     book_to_update.update()
             except:
                 abort(400)

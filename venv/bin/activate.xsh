@@ -28,7 +28,7 @@ def _deactivate(args):
 _deactivate(["nondestructive"])
 aliases["deactivate"] = _deactivate
 
-$VIRTUAL_ENV = r"/Users/hadi/Desktop/FSND-CAPSTONE-LIBRARY/venv"
+$VIRTUAL_ENV = r"/Users/hadi/Desktop/FSND_CAPSTONE_LIBRARY/venv"
 
 $_OLD_VIRTUAL_PATH = $PATH
 $PATH = $PATH[:]

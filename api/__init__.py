@@ -173,6 +173,14 @@ def create_app():
 
     @app.errorhandler(500)
     def error_500(error):
-        return jsonify({"success": False, "message": "internal server error. ex: db failure"}), 400
+        return jsonify({"success": False, "message": "internal server error. ex: db failure"}), 500
+
+    @app.errorhandler(AuthError)
+    def Auth_Error(auth_error):
+        return jsonify({
+            'error': auth_error.status_code,
+            'success': False,
+            'message': auth_error.error
+        }), auth_error.status_code
 
     return app

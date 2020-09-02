@@ -45,14 +45,21 @@ class BookTestCase(unittest.TestCase):
             for category in categories:
                 category.delete()
 
-    def add_book(self):
+    def add_book(self, category=None):
         with self.app.app_context():
             # add new demo data into postgres
             random_id = randint(1000000, 9999999)
             new_book = Book(name=f"Test_Book_{random_id}")
-            new_book.category = self.add_category()
+            if category is not None:
+                new_book.category = category
+            else:
+                new_category = self.add_category()
+                new_book.category = Category.query.filter(
+                    Category.name == new_category.get('name')).first()
             new_book.insert()
-            return new_book
+            return {"id": new_book.id,
+                    "name": new_book.name,
+                    "category": new_book.category.name}
 
     def add_category(self):
         with self.app.app_context():
@@ -60,13 +67,14 @@ class BookTestCase(unittest.TestCase):
             random_id = randint(1000000, 9999999)
             new_category = Category(name=f"Test_Category_{random_id}")
             new_category.insert()
-            return new_category
+            return {"id": new_category.name,
+                    "name": new_category.name}
 
-    # GET /books
+    # GET /books - ADMIN_TOKE
     # success
     def test_200_get_books(self):
         new_book = self.add_book()
-        header = self.user_jwt
+        header = self.self.admin_jw
         res = self.client().get('/books', headers=header)
         self.assertEqual(res.status_code, 200)
 
@@ -77,7 +85,7 @@ class BookTestCase(unittest.TestCase):
         res = self.client().get('/books', headers=header)
         self.assertEqual(res.status_code, 422)
 
-    # GET /categories
+    # GET /categories - ADMIN_TOKE
     # success
     def test_200_get_categories(self):
         new_category = self.add_category()
@@ -94,39 +102,90 @@ class BookTestCase(unittest.TestCase):
         res = self.client().get('/categories', headers=header)
         self.assertEqual(res.status_code, 422)
 
-    # POST /books
-    def test_200_POST_books(self):
+    # POST /books - ADMIN_TOKE
+    # success
+    def test_200_post_books(self):
+        random_id = randint(1000000, 9999999)
+        new_book_name = "Test_Book_{random_id}"
+        request_body = {"name": new_book_name,
+                        "category": self.add_category().get("name")}
+        header = self.admin_jwt
+        res = self.client().post('/books', json=request_body, headers=header)
+        res_data = json.loads(res.data)
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(new_book_name, res_data.get("name"))
+
+    def test_422_post_books(self):
+        random_id = randint(1000000, 9999999)
+        new_book_name = "Test_Book_{random_id}"
+        request_body = {"name": new_book_name,
+                        "category": "not_existed_category_name"}
+        header = self.admin_jwt
+        res = self.client().post('/books', json=request_body, headers=header)
+        self.assertEqual(res.status_code, 422)
+
+    # DELETE /books - ADMIN_TOKE
+    # success
+    def test_200_delete_books(self):
         new_book = self.add_book()
-        header = self.user_jwt
-        res = self.client().post('/books', headers=header)
+        request_body = {"name": new_book.get("name"),
+                        "category": new_book.get("category")}
+        header = self.admin_jwt
+        res = self.client().delete('/books', json=request_body, headers=header)
         self.assertEqual(res.status_code, 200)
 
-# def test_404_sent_requesting_beyond_valid_page(self):
-#     res = self.client().get('/books?page=1000', json={'rating': 1})
-#     data = json.loads(res.data)
-#
-#     self.assertEqual(res.status_code, 404)
-#     self.assertEqual(data['success'], False)
-#     self.assertEqual(data['message'], 'resource not found')
+    def test_422_delete_books(self):
+        random_id = randint(1000000, 9999999)
+        new_book_name = "Test_Book_{random_id}"
+        request_body = {"name": new_book_name,
+                        "category": "not_existed_category_name"}
+        header = self.admin_jwt
+        res = self.client().delete('/books', json=request_body, headers=header)
+        self.assertEqual(res.status_code, 422)
 
-# def test_post(self):
-#     res = self.client().post('/books', json={'title':'test_title','author':'test_author','rating': 1})
-#     data = json.loads(res.data)
-#     self.assertEqual(res.status_code, 200)
-#     self.assertEqual(data['success'], True)
-#     self.assertTrue(data['created'])
+    # PATCH / books - ADMIN_TOKE
+    # success
 
-# def test_post_with_search(self):
-#     response = self.client().post('/books/search',json={'title':'test4_search_title','author':'test4_search_uthor','rating': 1})
-#     data = json.loads(response.data)
-#     new_book = Book.query.filter_by(id=data['new_book_id']).first()
-#     self.assertEqual(response.status_code, 200)
-#     self.assertEqual(data['success'], True)
-#     self.assertEqual(data['new_book'], new_book.format())
-#     self.assertEqual(data['total_books'],len(Book.query.all()))
+    def test_200_patch_books(self):
+        new_book = self.add_book()
+        new_book_id = new_book.get("id")
+        new_category = self.add_category()
+        new_category_name = new_category.get("name")
+        request_body = {"category": new_category_name}
+        header = self.admin_jwt
+        res = self.client().patch(f'/books/{new_book_id}', json=request_body,
+                                  headers=header)
+        self.assertEqual(res.status_code, 200)
+
+    # failure
+    def test_422_patch_books(self):
+        new_book = self.add_book()
+        new_book_id = new_book.get("id")
+        new_category = self.add_category()
+        new_category_name = new_category.get("name")
+        request_body = {"category": "not_exiting_category"}
+        header = self.admin_jwt
+        res = self.client().patch(f'/books/{new_book_id}', json=request_body,
+                                  headers=header)
+        self.assertEqual(res.status_code, 400)
+
+    # RBAC for USER_TOKEN
+    def test_200_USER_TOKEN(self):
+        new_book = self.add_book()
+        header = self.user_jwt
+        res = self.client().get('/books', headers=header)
+        self.assertEqual(res.status_code, 200)
+
+    def test_422_USER_TOKEN(self):
+        random_id = randint(1000000, 9999999)
+        new_book_name = "Test_Book_{random_id}"
+        request_body = {"name": new_book_name,
+                        "category": self.add_category().get("name")}
+        header = self.user_jwt
+        res = self.client().post('/books', json=request_body, headers=header)
+        self.assertEqual(res.status_code, 403)
 
 
-# Make the tests conveniently executable
 if __name__ == "__main__":
     unittest.TextTestRunner(verbosity=2).run(suite)
     # unittest.main()

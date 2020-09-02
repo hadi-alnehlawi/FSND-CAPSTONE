@@ -102,13 +102,16 @@ def create_app():
         else:
             if book_name:
                 books_to_delete = Book.query.filter(Book.name == book_name).all()
-                for book in books_to_delete:
+                if books_to_delete:
                     try:
-                        book.delete()
-                        return jsonify({'success': True,
-                                        "book_name_deleted": book_name})
+                        for book in books_to_delete:
+                            book.delete()
+                            return jsonify({'success': True,
+                                            "book_name_deleted": book_name})
                     except:
                         abort(422)
+                else:
+                    abort(422)
             if book_id:
                 book_to_delete = Book.query.filter(Book.id == book_id).first()
                 try:

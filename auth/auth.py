@@ -10,7 +10,7 @@ AUTH0_DOMAIN = 'hadi-alnehlawi.eu.auth0.com'
 ALGORITHMS = ['RS256']
 API_AUDIENCE = 'library'
 
-# AuthError Exception
+# AuthError Exceptiond
 '''
 AuthError Exception
 A standardized way to communicate auth failure modes

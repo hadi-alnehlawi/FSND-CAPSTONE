@@ -2,8 +2,8 @@ import os
 from flask import Flask, request, abort, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
-from .model.model import setup_db, db, Book, Category
-from .auth.auth import AuthError, requires_auth, get_token_auth_header
+from model.model import setup_db, db, Book, Category
+from auth.auth import AuthError, requires_auth, get_token_auth_header
 import json
 
 

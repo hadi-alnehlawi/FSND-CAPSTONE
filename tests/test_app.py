@@ -3,8 +3,8 @@ import os
 import unittest
 import json
 from flask_sqlalchemy import SQLAlchemy
-from api import create_app
-from api.model.model import setup_db, db, Category, Book
+from app import create_app
+from model.model import setup_db, db, Category, Book
 from random import randint
 
 ADMIN_TOKEN = os.environ.get('ADMIN_TOKEN')
@@ -74,7 +74,7 @@ class BookTestCase(unittest.TestCase):
     # success
     def test_200_get_books(self):
         new_book = self.add_book()
-        header = self.self.admin_jw
+        header = self.admin_jwt
         res = self.client().get('/books', headers=header)
         self.assertEqual(res.status_code, 200)
 

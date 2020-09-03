@@ -1,6 +1,7 @@
 from flask_sqlalchemy import SQLAlchemy
 from flask import jsonify
 from flask_migrate import Migrate
+
 #----------------------------------------------------------------------------#
 # Models.
 #----------------------------------------------------------------------------#

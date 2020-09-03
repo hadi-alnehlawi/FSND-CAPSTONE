@@ -8,11 +8,6 @@ from flask_migrate import Migrate
 #----------------------------------------------------------------------------#
 
 db = SQLAlchemy()
-database_name = "library"
-user_name = "admin"
-user_password = "admin"
-host_name = "localhost"
-database_port = 5432
 
 
 database_path = os.environ.get('DATABASE_URL')
@@ -20,9 +15,11 @@ database_path = os.environ.get('DATABASE_URL')
 
 def setup_db(app, database_path=database_path):
     app.config['SQLALCHEMY_DATABASE_URI'] = database_path
-    app.config['DEBUG'] = True
+    app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+    db.app = app
     db.init_app(app)
-    migrate = Migrate(app, db)
+    db.create_all()
+    # migrate = Migrate(app, db)
 
 
 class Book(db.Model):

@@ -12,13 +12,17 @@ user_name = "admin"
 user_password = "admin"
 host_name = "localhost"
 database_port = 5432
-database_path = f'postgresql://{user_name}:{user_password}@{host_name}:{database_port}/{database_name}'
+
+
+database_path = os.environ.get('DATABASE_URL')
+
 
 def setup_db(app, database_path=database_path):
     app.config['SQLALCHEMY_DATABASE_URI'] = database_path
     app.config['DEBUG'] = True
     db.init_app(app)
     migrate = Migrate(app, db)
+
 
 class Book(db.Model):
     __tablename__ = 'books'

@@ -186,3 +186,7 @@ def create_app():
         }), auth_error.status_code
 
     return app
+
+
+if __name__ == '__main__':
+    app.run()

@@ -46,8 +46,11 @@ This will install all of the required packages we selected within the  `requirem
 
 Each time you open a new terminal session, run:
 
-    source setup.sh
-    export FLASK_APP=api.py;
+    $ source setup.sh
+    $ flask db init
+    $ flask db migrate
+    $ flask db upgrade
+    $ export FLASK_APP=api.py
 
 To run the server, execute:
 

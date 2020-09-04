@@ -4,11 +4,12 @@ from functools import wraps
 from jose import jwt
 from urllib.request import urlopen
 from flask import jsonify
+import os
 
 
-AUTH0_DOMAIN = 'hadi-alnehlawi.eu.auth0.com'
-ALGORITHMS = ['RS256']
-API_AUDIENCE = 'library'
+AUTH0_DOMAIN = os.environ.get('AUTH0_DOMAIN')
+ALGORITHMS = os.environ.get('ALGORITHMS')
+API_AUDIENCE = os.environ.get('API_AUDIENCE')
 
 # AuthError Exceptiond
 '''

@@ -9,7 +9,6 @@ import json
 
 def create_app():
     app = Flask(__name__)
-    # model.setup_db
     setup_db(app)
     CORS(app)
 
